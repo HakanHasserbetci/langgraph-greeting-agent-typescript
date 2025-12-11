@@ -1,0 +1,27 @@
+{
+  "mcpServers": {
+    "langgraph-greeting-agent-typescript": {
+      "command": "pnpm",
+      "args": [
+        "start"
+      ],
+      "cwd": ".",
+      "env": {
+        "NODE_ENV": "development"
+      },
+      "description": "LangGraph greeting agent (TypeScript) - Simple no-LLM agent for greetings",
+      "metadata": {
+        "type": "langgraph-agent",
+        "language": "typescript",
+        "framework": "langgraph",
+        "version": "1.0.0",
+        "noLLM": true
+      }
+    }
+  },
+  "settings": {
+    "autoStart": false,
+    "port": 8124,
+    "host": "127.0.0.1"
+  }
+}
