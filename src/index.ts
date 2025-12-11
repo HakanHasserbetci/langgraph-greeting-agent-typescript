@@ -4,6 +4,8 @@
  * and graph execution without AI models.
  */
 
+import 'dotenv/config';
+
 import { StateGraph, START, END, Annotation } from "@langchain/langgraph";
 
 /**
