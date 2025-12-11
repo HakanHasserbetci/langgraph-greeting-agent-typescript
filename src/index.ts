@@ -42,14 +42,10 @@ function greetingNode(state: typeof GreetingState.State): Partial<typeof Greetin
  */
 function createGreetingGraph() {
   // Initialize the graph with the state schema
-  const workflow = new StateGraph(GreetingState);
-
-  // Add the greeting node
-  workflow.addNode("greetingNode", greetingNode);
-
-  // Define the edges: START → greetingNode → END
-  workflow.addEdge(START, "greetingNode");
-  workflow.addEdge("greetingNode", END);
+  const workflow = new StateGraph(GreetingState)
+    .addNode("greetingNode", greetingNode)
+    .addEdge(START, "greetingNode")
+    .addEdge("greetingNode", END);
 
   // Compile the graph
   const app = workflow.compile();

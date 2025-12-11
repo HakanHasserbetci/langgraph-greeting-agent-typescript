@@ -1,359 +1,192 @@
 # Development History - TypeScript Implementation
 
-This document tracks the development process, decisions made, AI assistance used, and manual changes for the LangGraph Greeting Agent TypeScript implementation.
+## Overview
 
-## Project Overview
-
-**Goal**: Create a simple single-node LangGraph agent that does NOT use any LLM, accepts a user's name as input, and returns a greeting message.
-
-**Timeline**: Started December 11, 2025
-
----
-
-## Development Process
-
-### Phase 1: Project Initialization
-
-**AI Prompt Used**: "Initialize a TypeScript project using pnpm for a LangGraph greeting agent"
-
-**Actions Taken**:
-1. Created project directory structure
-2. Initialized git repository with `git init`
-3. Initialized pnpm project with `pnpm init`
-4. Created `package.json` with basic configuration
-
-**Manual Changes**: None - pnpm handled initialization automatically
-
-**Result**:
-- `package.json` created with default values
-- Git repository initialized
-- pnpm configured as package manager (v10.25.0)
+**Project**: LangGraph Greeting Agent (TypeScript)
+**Objective**: Single-node LangGraph agent accepting name input, returning greeting without LLM
+**Date**: December 11, 2025
+**Status**: Complete
 
 ---
 
-### Phase 2: Adding Dependencies
+## Phase 1: Project Initialization
 
-**AI Prompt Used**: "Add LangGraph and TypeScript dependencies to the project"
+**AI Prompt**: "Initialize a TypeScript project using pnpm for a LangGraph greeting agent"
 
-**Actions Taken**:
+**Commands**:
+```bash
+pnpm init
+git init
+```
 
-1. **Production Dependencies**:
-   ```bash
-   pnpm add @langchain/langgraph @langchain/core
-   ```
-   - `@langchain/langgraph@1.0.4` - Main framework
-   - `@langchain/core@1.1.4` - Core abstractions
-
-2. **Development Dependencies**:
-   ```bash
-   pnpm add -D typescript @types/node tsx
-   ```
-   - `typescript@5.9.3` - TypeScript compiler
-   - `@types/node@25.0.0` - Node.js type definitions
-   - `tsx@4.21.0` - TypeScript execution runtime (faster than ts-node)
-
-**Manual Changes**: None - pnpm handled dependency resolution
-
-**Result**:
-- Total: 66 packages installed (32 production, 8 dev, rest transitive)
-- `pnpm-lock.yaml` generated for reproducible builds
-- `node_modules/` created with dependencies
+**Result**: package.json created, git repository initialized, pnpm v10.25.0 configured
 
 ---
 
-### Phase 3: TypeScript Configuration
+## Phase 2: Dependencies
 
-**AI Prompt Used**: "Create a TypeScript configuration for a modern Node.js project"
+**AI Prompt**: "Add LangGraph and TypeScript dependencies to the project"
 
-**Actions Taken**:
-1. Created `tsconfig.json` with strict settings:
-   - Target: ES2020
-   - Module: ESNext with Node resolution
-   - Strict mode enabled
-   - Source maps and declarations enabled
-   - Output directory: `dist/`
-   - Root directory: `src/`
+**Commands**:
+```bash
+pnpm add @langchain/langgraph @langchain/core
+pnpm add -D typescript @types/node tsx vitest dotenv
+```
 
-**Design Decisions**:
-- **Strict Mode**: Enabled for maximum type safety
-- **ES2020**: Modern JavaScript features while maintaining compatibility
-- **Source Maps**: For debugging compiled code
-- **Declarations**: Generate .d.ts files for library usage
+**Dependencies Installed**:
+| Package | Version | Purpose |
+|---------|---------|---------|
+| @langchain/langgraph | 1.0.4 | Graph framework |
+| @langchain/core | 1.1.4 | Core abstractions |
+| typescript | 5.9.3 | Compiler |
+| tsx | 4.21.0 | Runtime execution |
+| vitest | 4.0.15 | Testing framework |
 
-**Manual Changes**: None - AI-generated configuration was appropriate
-
----
-
-### Phase 4: Project Structure Setup
-
-**Actions Taken**:
-1. Created `src/` directory for source files
-2. Created `.gitignore` with exclusions for:
-   - `node_modules/`
-   - `dist/` (build output)
-   - `.env` files and variants
-   - IDE-specific files
-   - OS-specific files
-   - Log files
-
-**Manual Changes**: None
+**Total**: 66 packages
 
 ---
 
-### Phase 5: Implementation
+## Phase 3: TypeScript Configuration
 
-**AI Prompt Used**: "Implement a LangGraph agent in TypeScript with a state schema containing name (input) and greeting (output) fields, and a single greetingNode that generates a greeting message"
+**AI Prompt**: "Create a TypeScript configuration for a modern Node.js project"
 
-**Design Decisions**:
+**tsconfig.json**:
+- Target: ES2020
+- Module: ESNext with Node resolution
+- Strict mode: enabled
+- Output: dist/
+- Source maps: enabled
 
-1. **State Schema**:
-   - Used LangGraph's `Annotation.Root` system (TypeScript-specific)
-   - Two fields: `name` and `greeting`, both strings
-   - Type-safe at compile time
-   - Different from Python's TypedDict approach
+---
 
-2. **Node Implementation**:
-   - Named `greetingNode` (action verb, camelCase for TypeScript)
-   - Takes full state as input
-   - Returns partial state update (`{ greeting: message }`)
-   - Async-compatible (returns Promise-compatible type)
-   - Full type safety with inference
+## Phase 4: Implementation
 
-3. **Graph Structure**:
-   - Simple linear flow: START → greetingNode → END
-   - Used `StateGraph` class with state annotation
-   - Explicit edge definitions using `addEdge()`
+**AI Prompt**: "Implement a LangGraph agent in TypeScript with a state schema containing name (input) and greeting (output) fields"
 
-4. **Code Organization**:
-   - `GreetingState`: State schema using Annotation
-   - `greetingNode()`: Node function
-   - `createGreetingGraph()`: Graph builder and compiler
-   - `main()`: Example usage with async/await
-   - Exports for use as a library
-
-**Implementation Code**:
+**Implementation** (`src/index.ts`):
 ```typescript
-import { StateGraph, START, END, Annotation } from "@langchain/langgraph";
-
 const GreetingState = Annotation.Root({
   name: Annotation<string>,
   greeting: Annotation<string>,
 });
 
-function greetingNode(state: typeof GreetingState.State):
-  Partial<typeof GreetingState.State> {
-  const name = state.name;
-  const greetingMessage = `Hello, ${name}! Welcome!`;
-  return { greeting: greetingMessage };
+function greetingNode(state: typeof GreetingState.State): Partial<typeof GreetingState.State> {
+  return { greeting: `Hello, ${state.name}! Welcome!` };
 }
 
 function createGreetingGraph() {
-  const workflow = new StateGraph(GreetingState);
-  workflow.addNode("greetingNode", greetingNode);
-  workflow.addEdge(START, "greetingNode");
-  workflow.addEdge("greetingNode", END);
+  const workflow = new StateGraph(GreetingState)
+    .addNode("greetingNode", greetingNode)
+    .addEdge(START, "greetingNode")
+    .addEdge("greetingNode", END);
   return workflow.compile();
 }
 ```
 
-**Manual Changes**:
-- Added comprehensive JSDoc comments
-- Added export statements for library usage
-- Added conditional execution check (`require.main === module`)
-- Formatted with consistent spacing
+**Design Decisions**:
+| Decision | Rationale |
+|----------|-----------|
+| Annotation.Root | LangGraph's TypeScript-native state system |
+| Delta returns | Returns only `{greeting}`, not full state |
+| camelCase | TypeScript naming convention |
+| Partial<State> return type | Type-safe delta updates |
 
 ---
 
-### Phase 6: Package Configuration
+## Phase 5: Unit Tests
 
-**AI Prompt Used**: "Update package.json with appropriate scripts and metadata"
+**AI Prompt**: "Add comprehensive unit tests with Vitest"
 
-**Actions Taken**:
-1. Updated `package.json` with:
-   - Descriptive package name: `langgraph-greeting-agent`
-   - Proper description
-   - Main entry point: `dist/index.js`
-   - Type definitions: `dist/index.d.ts`
-   - Module type: `commonjs`
-   - Scripts:
-     - `start`: Run with tsx (fast development)
-     - `dev`: Watch mode with auto-reload
-     - `build`: Compile TypeScript
-     - `test`: Placeholder for tests
-   - Keywords for searchability
+**Test File**: `tests/greeting-agent.test.ts`
 
-**Manual Changes**: None - AI configuration covered all requirements
+**Test Coverage**:
+- Return type and structure validation
+- Greeting content accuracy
+- Delta pattern verification
+- Multiple invocations
+- Edge cases (empty name, special characters, spaces)
+- State immutability
+- Concurrent execution
+- Performance (< 100ms verification)
+- No LLM API requirements
 
----
-
-### Phase 7: Testing
-
-**Command**: `pnpm start`
-
-**Test Results**:
+**Result**:
 ```
-LangGraph Greeting Agent (No LLM)
-========================================
-Input: Alice
-Output: Hello, Alice! Welcome!
-
-Input: Bob
-Output: Hello, Bob! Welcome!
+25 passed in 2.87s
 ```
 
-**Status**: ✓ All tests passed
-- Agent accepts name string as input
-- Agent returns greeting string containing the input name
-- Graph executes properly (START → greetingNode → END)
-- Code runs without errors
-- No LLM used (pure state transformation)
-- TypeScript types compile correctly
-
 ---
 
-### Phase 8: Documentation
+## Phase 6: MCP Configuration
 
-**AI Prompt Used**: "Create comprehensive README.md with setup and run instructions for TypeScript project"
-
-**Actions Taken**:
-1. Created detailed README.md covering:
-   - Project description and features
-   - Prerequisites (Node.js, pnpm)
-   - Installation steps
-   - Multiple usage options (start, dev, build)
-   - Code examples
-   - Project structure explanation
-   - How it works (with diagrams)
-   - Development guidelines
-   - Available scripts
-
-2. Created this dev-history.md to track:
-   - Development phases
-   - AI prompts used
-   - Manual changes made
-   - Design decisions
-
-**Manual Changes**: None - AI-generated documentation was comprehensive
-
----
-
-## Key Learnings
-
-### About LangGraph TypeScript:
-1. **Annotation System**: Different from Python's TypedDict, uses `Annotation.Root()`
-2. **Type Inference**: TypeScript provides excellent type inference for state
-3. **Async Support**: Built-in Promise support for async operations
-4. **Class-Based API**: Uses `new StateGraph()` instead of function calls
-
-### About pnpm:
-1. **Fast Installation**: Uses content-addressable storage for efficiency
-2. **Disk Space Efficient**: Shares packages across projects via hard links
-3. **Strict**: Doesn't allow access to undeclared dependencies
-4. **Lock File**: `pnpm-lock.yaml` ensures reproducible installs
-
-### About tsx:
-1. **Fast Execution**: No build step needed for development
-2. **Watch Mode**: Auto-reloads on file changes
-3. **Modern**: Supports latest TypeScript features
-4. **Production**: Can be replaced with compiled JS for deployment
-
-### Best Practices Applied:
-1. **Type Safety**: Full TypeScript strict mode
-2. **Documentation**: JSDoc comments for all functions
-3. **Modularity**: Exports for library usage
-4. **Modern JavaScript**: ES2020 features
-5. **Package Manager**: pnpm for efficiency
-
----
-
-## Differences from Python Implementation
-
-### State Schema:
-- **Python**: `TypedDict` with simple field definitions
-- **TypeScript**: `Annotation.Root()` with typed annotations
-
-### Syntax:
-- **Python**: `workflow.add_node()`, `workflow.add_edge()`
-- **TypeScript**: `workflow.addNode()`, `workflow.addEdge()`
-
-### Execution:
-- **Python**: Synchronous by default
-- **TypeScript**: Returns promises, uses async/await
-
-### Package Management:
-- **Python**: uv with `pyproject.toml`
-- **TypeScript**: pnpm with `package.json`
-
-### Runtime:
-- **Python**: Direct execution with Python interpreter
-- **TypeScript**: Compilation or tsx runtime
+**File**: `mcp.json`
+```json
+{
+  "name": "langgraph-greeting-agent",
+  "version": "1.0.0",
+  "type": "langgraph-agent",
+  "command": "pnpm start",
+  "metadata": {
+    "language": "typescript",
+    "noLLM": true
+  }
+}
+```
 
 ---
 
 ## Git Commit History
 
-### Initial Commit (Pending)
-**Message**: `feat: initialize TypeScript project with pnpm`
-**Files**:
-- package.json
-- tsconfig.json
-- .gitignore
-- pnpm-lock.yaml
-
-### Second Commit (Pending)
-**Message**: `feat: add greeting node with state schema`
-**Files Added**:
-- src/index.ts (full implementation)
-
-### Third Commit (Pending)
-**Message**: `docs: add README and development history`
-**Files Added**:
-- README.md (complete)
-- dev-history.md (this file)
+```
+b067902 feat: initialize TypeScript project with pnpm
+e955a60 feat: add greeting node with state schema
+32bb271 docs: add README and development history
+fa22180 docs: add comprehensive debugging guide
+a2c8ecf docs: update README with GitHub repository URL
+1d19241 test: add comprehensive unit tests with vitest
+36f40be feat: add LangGraph MCP server configuration
+ccf588f docs: add comprehensive LangSmith setup guide
+5566221 feat: add dotenv support and LangSmith verification tools
+```
 
 ---
 
-## Dependencies
+## Technical Notes
 
-### Production Dependencies:
-- `@langchain/langgraph@1.0.4`: LangGraph framework
-- `@langchain/core@1.1.4`: Core LangChain abstractions
+### TypeScript vs Python Differences
+| Aspect | TypeScript | Python |
+|--------|------------|--------|
+| State Schema | Annotation.Root() | TypedDict |
+| Naming | camelCase | snake_case |
+| Graph Init | new StateGraph() | StateGraph() |
+| Execution | async/await | synchronous |
+| Package Manager | pnpm | uv |
 
-### Development Dependencies:
-- `typescript@5.9.3`: TypeScript compiler
-- `@types/node@25.0.0`: Node.js type definitions
-- `tsx@4.21.0`: TypeScript execution runtime
-
-### Key Transitive Dependencies:
-- `langsmith`: Tracing and debugging
-- Various LangChain utilities and helpers
-
----
-
-## Next Steps (If Time Permits)
-
-1. **Unit Tests**: Add tests using Vitest or Jest
-2. **Bonus Features**:
-   - Configure LangGraph MCP server
-   - Set up LangSmith for visualization
-   - Add screenshot of graph visualization
-3. **Enhanced Features**:
-   - Support for custom greeting templates
-   - Multiple greeting styles
-   - Internationalization
+### Key Files
+```
+src/index.ts          # Agent implementation (88 lines)
+tests/greeting-agent.test.ts  # Unit tests (274 lines)
+package.json          # Dependencies and scripts
+tsconfig.json         # TypeScript configuration
+mcp.json              # MCP server configuration
+```
 
 ---
 
-## Acceptance Criteria Status
+## Acceptance Criteria
 
-- [x] Agent accepts a name string as input
-- [x] Agent returns a greeting string containing the input name
-- [x] Graph has proper START → node → END structure
-- [x] Code runs without errors
-- [ ] Repo is public on GitHub (pending push)
-- [x] No .env files committed (excluded in .gitignore)
-- [x] dev-history.md documents the process
+| Criterion | Status |
+|-----------|--------|
+| Agent accepts name string as input | Pass |
+| Agent returns greeting containing name | Pass |
+| Graph has START -> node -> END structure | Pass |
+| Code runs without errors | Pass |
+| No .env files committed | Pass |
+| Meaningful commit messages | Pass |
+| Unit tests included | Pass (25 tests) |
+| MCP configuration | Pass |
 
 ---
 
-**Last Updated**: December 11, 2025
+**Development Method**: AI-assisted (Claude Code)
+**Manual Changes**: Minimal - JSDoc comments, export statements
