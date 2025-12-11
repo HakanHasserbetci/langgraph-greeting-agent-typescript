@@ -18,8 +18,8 @@ A simple single-node LangGraph agent that demonstrates state management and grap
 
 1. Clone this repository:
 ```bash
-git clone <repository-url>
-cd langgraph-typescript
+git clone https://github.com/HakanHasserbetci/langgraph-greeting-agent-typescript.git
+cd langgraph-greeting-agent-typescript
 ```
 
 2. Install dependencies using pnpm:
